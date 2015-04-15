@@ -1,0 +1,47 @@
+\documentclass[a4paper,11pts]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+%\usepackage[frenchb]{babel}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\pagestyle{fancy}
+\cfoot{ENSEIRB-MATMECA}
+\rfoot{\thepage}
+
+\renewcommand*\thesection{\arabic{section}}
+
+\begin{document}
+
+\begin{center}
+
+\includegraphics[width=100px]{img/enseirb-matmeca}
+
+\Huge{Rapport SSI}
+\noindent\rule{10cm}{0.4pt}
+
+\normalsize{\today}
+
+\vspace{1cm}
+
+\Large{Binome : Akané Levy, Maxime Paillassa}\\
+\Large{Encadrant: Paul Dorbec}
+
+\end{center}
+
+\clearpage
+
+\input{introduction}
+
+\input{enjeu}
+
+\input{detail}
+
+\input{solutions}
+
+\input{bilan}
+
+
+\end{document}
