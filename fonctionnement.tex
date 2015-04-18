@@ -32,10 +32,13 @@ Plus précisément, TLS est composé de deux niveaux: TLS Record Protocol (couch
 
 \subsubsection{TLS Handshake protocol}
 
-Ce protocole permet l'authentification et l'échange de clés nécessaires pour établir une session sécurisée:
-\begin{center}
-\includegraphics[scale=0.6]{img/tls-handshake.png}
-\end{center}
+Ce protocole permet l'authentification et l'échange de clés nécessaires pour établir une session sécurisée. La figure \ref{handshake} décrit les différentes étapes de ce protocole:
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.6]{img/tls-handshake.png}
+  \caption{TLS handshake}
+  \label{handshake}
+\end{figure}  
 
 Détails de chaque étape:
 \begin{itemize}
@@ -52,10 +55,13 @@ Les algorithmes utilisés pour l'échange de clés sont DH (Diffie-Hellman) et R
 
 \subsubsection{TLS Record Protocol}
 
-Ce protocole permet de sécuriser les données en utilisant les clés qu'on a crée pendant le handshake. Il permet également de vérifier l'intégrité des données:
-\begin{center}
+Ce protocole permet de sécuriser les données en utilisant les clés qu'on a crée pendant le handshake. Il permet également de vérifier l'intégrité des données. La figure \ref{record} présente son fonctionnement:
+\begin{figure}[H]
+\centering
 \includegraphics[scale=0.7]{img/tls-record.png}
-\end{center}
+\caption{TLS record}
+\label{record}
+\end{figure}
 
 Détails des étapes:
 \begin{itemize}
@@ -69,6 +75,28 @@ Une fois ceci réalisé, on passe à la couche suivante de transport (TCP). Quan
 
 
 \subsection{La faille Poodle}
+
+Comme on le voit sur la figure \ref{poodle}, le principe est que le client demande un service qui nécessite l'utilisation de SSL/TLS, et l'adversaire, en utilisant une attaque de type "man in the middle", force l'utilisation de SSLv3 et exploite ses failles.
+
+\begin{figure}[H]
+\includegraphics[scale=0.8]{img/poodle.jpg}
+\caption{fonctionnement de la faille poodle}
+\label{poodle}
+\end{figure}
+
+Avec cette méthode, l'adversaire n’a pas accès aux fichiers stockés dans l’appareil ciblé, mais il peut intercepter ses données de connexion, comme par exemple les cookies déposés dans le navigateur par un serveur lors d’une session. Sans posséder le mot de passe du client, l'adversaire peut effectuer des actions comme envoyer des messages sur Twitter en se faisant passer pour elle, lire et effacer son courrier électronique, etc.
+
+\subsubsection{Détails de la vulnérabilité de SSLv3 exploitée}
+
+Le chiffrement utilisé dans SSLv3 se sert de RC4 (Rivest Cipher 4), qui est un générateur de bits pseudo-aléatoires qui va générer la clé $k$. \\
+On réalise ensuite une opération XOR entre le texte clair $m$ et la clé $k$: le message crypté $c$ est alors $c = m \oplus k$. Pour déchiffrer, on a alors $m = c \oplus k$. \\
+Pour générer la suite de bits formant la clé, l'algorithme a deux secrets:
+\begin{itemize}
+  \item une permutation $\sigma$ de tous les 256 octets possibles
+  \item deux pointeurs i et j de 8 bits qui servent d'index dans un tableau
+\end{itemize}
+La permutation est initialisée grâce à la clé de taille variable, typiquement entre 40 et 256 bits, grâce au key schedule de RC4
+
 
 \subsection{La faille Freak}
 
