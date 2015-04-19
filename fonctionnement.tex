@@ -42,11 +42,11 @@ Ce protocole permet l'authentification et l'échange de clés nécessaires pour 
 
 Détails de chaque étape:
 \begin{itemize}
-\item le client envoie un message "ClientHello" au serveur, pour lui indiquer entre autres la dernière version TLS qu'il supporte, la liste des algorithmes de chiffrement qu'il supporte et les méthodes de compression qu'il supporte
+\item le client envoie un message "ClientHello" au serveur, pour lui indiquer la dernière version TLS qu'il supporte, la liste des algorithmes de chiffrement qu'il supporte et les méthodes de compression qu'il supporte. Il envoie également un nombre aléatoire
 \item le serveur renvoie un message "ServerHello", indiquant la version TLS, l'algorithme de chiffrement et la méthode de compression qui seront utilisés. Il envoie également son certificat (permettant l'authentification) et un nombre aléatoire
 \item le serveur envoie un message "ServerHelloDone" pour indiquer qu'il a fini avec la première phase du handshake
 \item le client génère un nombre appelé "PreMasterSecret", encrypté avec la clé publique du certificat du serveur
-\item le client et le serveur génèrent alors leur secret partagé "Master Secret" à partir du nombre aléatoire et du "PreMasterSecret"
+\item le client et le serveur génèrent alors leur secret partagé "Master Secret" à partir de leur nombre aléatoire et du "PreMasterSecret"
 \item le client envoie un message "ChangeCipherSpec" indiquant que la suite de la communication sera cryptée, et envoie un message "Finished" qui est donc crypté
 \item le serveur reçoit et décrypte le message et envoie son "ChangedCipherSpec"
 \item le client reçoit et décrypte le message et c'est la fin du handshake
@@ -88,14 +88,44 @@ Avec cette méthode, l'adversaire n’a pas accès aux fichiers stockés dans l�
 
 \subsubsection{Détails de la vulnérabilité de SSLv3 exploitée}
 
-Le chiffrement utilisé dans SSLv3 se sert de RC4 (Rivest Cipher 4), qui est un générateur de bits pseudo-aléatoires qui va générer la clé $k$. \\
-On réalise ensuite une opération XOR entre le texte clair $m$ et la clé $k$: le message crypté $c$ est alors $c = m \oplus k$. Pour déchiffrer, on a alors $m = c \oplus k$. \\
-Pour générer la suite de bits formant la clé, l'algorithme a deux secrets:
+Deux méthodes de chiffrement sont utilisées dans SSLv3:
 \begin{itemize}
-  \item une permutation $\sigma$ de tous les 256 octets possibles
-  \item deux pointeurs i et j de 8 bits qui servent d'index dans un tableau
+\item la première est RC4 (Rivest Cipher 4) qui est un chiffrement par flot (stream cipher). Le principe d'un chiffrement par flot est de générer un flot de bits aléatoires $k$ et de réaliser un XOR entre ce flot et le message à chiffrer $m$. L'avantage est que chiffrement et déchiffrement sont très rapides: si $c = m \oplus k$, alors $m = c \oplus k$. Cependant, RC4 est actuellement considéré comme peu s\^ur et ne devrait plus \^etre utilisé
+\item l'autre méthode est un chiffrement par blocs cha\^inés (CBC pour cipher block chaining), et c'est elle qui fait l'objet de l'attaque Poodle que l'on va détailler
 \end{itemize}
-La permutation est initialisée grâce à la clé de taille variable, typiquement entre 40 et 256 bits, grâce au key schedule de RC4
+
+\paragraph{Fonctionnement du chiffrement par blocs cha\^inés}
+
+Les chiffrements et déchiffrements par blocs cha\^inés sont illustrés en figure \ref{cbc-enc} et \ref{cbc-dec} (Plaintext est le message en clair noté $m$ et Ciphertext est le message chiffré noté $c$) \\
+
+\noindent On utilise la formule suivante pour chiffrer: \\
+$c_i = Enc_K(m_i \oplus c_{i-1}),\ c_0 = IV$
+
+\begin{figure}[H]
+\includegraphics[scale=0.6]{img/cbc-enc.png}
+\caption{CBC encryption}
+\label{cbc-enc}
+\end{figure}
+
+\noindent On utilise la formule suivante pour déchiffrer: \\
+$m_i = Dec_K(c_i) \oplus c_{i-1},\ c_0 = IV$ 
+
+\begin{figure}[H]
+\includegraphics[scale=0.6]{img/cbc-dec.png}
+\caption{CBC decryption}
+\label{cbc-dec}
+\end{figure}
+
+Si un bit du message chiffré change, le bloc de message en clair correspondant est complètement corrompu et cela inverse le bit correspondant dans le bloc suivant de message en clair, mais le reste du bloc ne change pas. C'est ce qui est exploité par Poodle.
+
+Supposons que l'adversaire ait trois blocs chiffrés $c_1$, $c_2$ et $c_3$ et qu'il souhaite décrypter le second bloc (et donc obtenir $m_2$). Il sait seulement que le dernier bloc est complété (padded) en utilisant la méthode PKCS7, c'est à dire que le dernier bloc est complété avec $n$ octets, chacun égal à $n$.
+Le décryptage fonctionne comme ceci: $m_i = Dec(c_i) \oplus c_{i-1}$, avec $c_0 = IV$. Si l'adversaire change le dernier octet de $c_1$ et envoie ($IV$, $c_1$, $c_2$) au serveur, cela va affecter tout le bloc $m_1$ et le dernier octet de $m_2$. Ensuite le serveur va vérifier le dernier bloc décrypté ($m_2$) et retourner oui ou non si la complétion ("padding") est correcte.
+Si $b_{-1}$ est le dernier octet de $c_1$, l'adversaire le change comme suit: $b_{-1} = b_{-1} \oplus z_{-1} \oplus$ 0x01, où $z_{-1}$ est la valeur du dernier octet de $m_2$. Si $z_{-1}$ est correct, le serveur ne va pas trouver d'erreur de padding (parce que le dernier octet de $m_2$ sera égal à 0x01, ce qui est un padding correct). Dans l'autre cas, le serveur va trouver une erreur de padding et l'adversaire va essayer une autre valeur de $z_{-1}$. Dans le pire des cas, il doit faire 255 essais pour trouver la bonne valeur de $z_{-1}$.
+
+Une fois qu'il connait le dernier octet de $m_2$, l'adversaire peut obtenir l'avant dernier octet de $m_2$. Il change les deux derniers octets de $c_1$: $b_{-1} = b_{-1} \oplus z_{-1} \oplus$ 0x02 et $b_{-2} = b_{-2} \oplus z_{-2} \oplus$ 0x02. Après 255 essais au maximum il trouve $z_{-2}$ et ainsi de suite. 
+
+Si chaque bloc fait 128 bits (AES), soit 16 octets, l'adversaire va obtenir $m_2$ en moins de 255x16 = 4080 essais. Cette attaque ne co\^ute presque rien et peut \^etre réalisée en quelques secondes.
+
 
 
 \subsection{La faille Freak}
