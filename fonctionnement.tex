@@ -1,7 +1,7 @@
 \section{Fonctionnement des failles}
 
 
-Les deux failles utilisent le m\^eme principe et tiennent leur existence du fait que les anciennes versions des protocoles SSL/TLS comportent des failles. L'adversaire utilise une attaque de type "man in the middle" et force l'utilisation d'une version vulnérable de SSL, de manière à pouvoir exploiter ses failles. Parfois il n'est m\^eme pas utile de la forcer, car quand un navigateur doté d’une version récente n’arrive pas à se connecter à un serveur non mis à jour, ou mal configuré, il réessaie en utilisant des versions anciennes : c’est la downgrade dance, qui aboutit à l'utilisation d'une ancienne version vulnérable.
+Les deux failles utilisent le m\^eme principe et tiennent leur existence du fait que les anciennes versions des protocoles SSL/TLS comportent des failles. L'adversaire utilise une attaque de type "man in the middle" et force l'utilisation d'une version vulnérable de SSL, de manière à pouvoir exploiter ses failles. Parfois il n'est m\^eme pas utile de la forcer, car quand un navigateur doté d’une version récente n’arrive pas à se connecter à un serveur non mis à jour, ou mal configuré, il réessaie en utilisant des versions anciennes : c’est la downgrade dance, qui peut aboutir à l'utilisation d'une ancienne version vulnérable.
 
 \subsection{Un point sur SSL/TLS}
 
@@ -19,8 +19,8 @@ TLS a ensuite pris le relais:
 \item Avril 2006: TLS 1.1
 \item Avril 2008: TLS 1.2
 \end{itemize}
-TLS, comme SSLv3, intègre un mécanisme de compatibilité ascendante avec les versions précédentes. Ainsi, quand le client et le serveur négocient la version du protocole qu'ils vont utiliser, ils peuvent choisir la plus récente commune aux deux. En Mars 2011, la compatibilité des versions TSL avec SSLv2 a été abandonnée. \\
-La plupart des navigateurs supportent la version TSL 1.2:
+TLS, comme SSLv3, intègre un mécanisme de compatibilité ascendante avec les versions précédentes. Ainsi, quand le client et le serveur négocient la version du protocole qu'ils vont utiliser, ils peuvent choisir la plus récente commune aux deux. En Mars 2011, la compatibilité des versions TLS avec SSLv2 a été abandonnée. \\
+La plupart des navigateurs supportent la version TLS 1.2:
 \begin{itemize}
 \item Google Chrome 30 et suivants
 \item Mozilla Firefox 27 et suivants
@@ -51,7 +51,7 @@ Détails de chaque étape:
 \item le serveur reçoit et décrypte le message et envoie son "ChangedCipherSpec"
 \item le client reçoit et décrypte le message et c'est la fin du handshake
 \end{itemize}
-Les algorithmes utilisés pour l'échange de clés sont DH (Diffie-Hellman) et RSA.
+Les algorithmes utilisés pour l'échange de clés sont DH (Diffie-Hellman) et RSA. 
 
 \subsubsection{TLS Record Protocol}
 
@@ -71,8 +71,17 @@ Détails des étapes:
 \item on crypte les messages
 \item on ajoute un en-t\^ete
 \end{itemize}
-Une fois ceci réalisé, on passe à la couche suivante de transport (TCP). Quand on reçoit un message, on fait l'opération inverse (décryptage, vérification d'authenfication avec le MAC, décompression, défragmentation).
+Quand on reçoit un message, on fait l'opération inverse (décryptage, vérification d'authenfication avec le MAC, décompression, défragmentation). \\
+Les algorithmes utilisés pour la phase de cryptage sont RC4, CBC, AES, DES, etc. \\
 
+La sécurité du protocole est donc assurée par deux éléments:
+\begin{itemize}
+\item un chiffrement asymétrique qui permet, après authentification de la clé publique du serveur, la constitution d'un secret partagé entre le client et le serveur. C'est ce qui a lieu au cours du handshake
+\item un chiffrement symétrique qui est utilisé dans la phase d'échange de données. C'est ce qui a lieu dans la phase de cryptage du record. Les clés de chiffrement symétrique sont calculées à partir du secret partagé (de plus, une fonction de hachage est également utilisée pour assurer l'intégrité et l'authentification des données)
+\end{itemize}
+
+La faille Poodle exploite une faiblesse de SSLv3 au niveau du chiffrement symétrique (CBC). \\
+La faille Freak exploite une faiblesse de SSLv3 au niveau du chiffrement asymétrique (RSA).
 
 \subsection{La faille Poodle}
 
@@ -126,6 +135,7 @@ Une fois qu'il connait le dernier octet de $m_2$, l'adversaire peut obtenir l'av
 
 Si chaque bloc fait 128 bits (AES), soit 16 octets, l'adversaire va obtenir $m_2$ en moins de 255x16 = 4080 essais. Cette attaque ne co\^ute presque rien et peut \^etre réalisée en quelques secondes.
 
+La publication de Google qui a officialisé le faille offre les détails nécessaires pour récupérer les cookies d'une cible: This POODLE Bites: Exploiting The SSL 3.0 Fallback, Security Advisory, Bodo Möller, Thai Duong, Krzysztof Kotowicz, Google, September 2014.
 
 
 \subsection{La faille Freak}
