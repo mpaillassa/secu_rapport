@@ -74,14 +74,16 @@ Détails des étapes:
 Quand on reçoit un message, on fait l'opération inverse (décryptage, vérification d'authenfication avec le MAC, décompression, défragmentation). \\
 Les algorithmes utilisés pour la phase de cryptage sont RC4, CBC, AES, DES, etc. \\
 
+Les seules différences entre SSLv3, TLS 1.0, TLS 1.1 et TLS 1.2 sont principalement les "versions" algorithmes utilisés (RSA 512/1024/2048 bits, etc), mais le fonctionnement global décrit par les protocoles TLS handshake et TLS record est très similaire. \\
+
 La sécurité du protocole est donc assurée par deux éléments:
 \begin{itemize}
 \item un chiffrement asymétrique qui permet, après authentification de la clé publique du serveur, la constitution d'un secret partagé entre le client et le serveur. C'est ce qui a lieu au cours du handshake
 \item un chiffrement symétrique qui est utilisé dans la phase d'échange de données. C'est ce qui a lieu dans la phase de cryptage du record. Les clés de chiffrement symétrique sont calculées à partir du secret partagé (de plus, une fonction de hachage est également utilisée pour assurer l'intégrité et l'authentification des données)
 \end{itemize}
 
-La faille Poodle exploite une faiblesse de SSLv3 au niveau du chiffrement symétrique (CBC). \\
-La faille Freak exploite une faiblesse de SSLv3 au niveau du chiffrement asymétrique (RSA).
+La faille Poodle exploite une faille de SSLv3 au niveau du chiffrement symétrique CBC: le padding (complétion d'un bloc de bits pour respecter un format) permet de déchiffrer des messages. \\
+La faille Freak exploite une faiblesse de SSLv3 au niveau du chiffrement asymétrique RSA: de nos jours on peut casser une clé RSA de 512 bits facilement, et SSLv3 utilise des clés RSA de 512 bits.
 
 \subsection{La faille Poodle}
 
@@ -97,7 +99,7 @@ Avec cette méthode, l'adversaire n’a pas accès aux fichiers stockés dans l�
 
 \subsubsection{Détails de la vulnérabilité de SSLv3 exploitée}
 
-Deux méthodes de chiffrement sont utilisées dans SSLv3:
+Deux méthodes de chiffrement symétrique sont principalement utilisées dans SSLv3:
 \begin{itemize}
 \item la première est RC4 (Rivest Cipher 4) qui est un chiffrement par flot (stream cipher). Le principe d'un chiffrement par flot est de générer un flot de bits aléatoires $k$ et de réaliser un XOR entre ce flot et le message à chiffrer $m$. L'avantage est que chiffrement et déchiffrement sont très rapides: si $c = m \oplus k$, alors $m = c \oplus k$. Cependant, RC4 est actuellement considéré comme peu s\^ur et ne devrait plus \^etre utilisé
 \item l'autre méthode est un chiffrement par blocs cha\^inés (CBC pour cipher block chaining), et c'est elle qui fait l'objet de l'attaque Poodle que l'on va détailler
@@ -140,4 +142,45 @@ La publication de Google qui a officialisé le faille offre les détails nécess
 
 \subsection{La faille Freak}
 
+Le principe global de fonctionnement est le m\^eme que pour la faille poodle (une attaque de type "man in the middle" force l'utilisation de SSLv3). La seule différence est que ce n'est pas la m\^eme vulnérabilité de SSLv3 qui est exploitée.
 
+\subsubsection{Détails de la vulnérabilité de SSLv3 exploitée}
+
+Ici, il s'agit du fait que si l'algorithme de chiffrement asymétrique utilisé pendant le handshake est RSA, alors sous SSLv3, la clé est de 512 bits. Cette taille de 512 bits a été choisie par la NSA dans les années 1990, et était juste suffisante pour que eux seuls puissent casser ces clés. Seulement, de nos jours, casser une clé RSA de 512 bits est très abordable. Dans les versions ultérieures de SSLv3 (TLS 1.0, 1.1 et 1.2), ces clés sont plus grandes (1024/2048 bits), d'où l'inter\^et pour l'adversaire de forcer l'utilisation de SSLv3 par une attaque "man in the middle".
+
+\paragraph{Fonctionnement du chiffrement RSA}
+
+Le chiffrement RSA sert à établir un secret entre deux entités, par convention Alice (A) et Bob (B). Dans le cas du protocole SSL/TLS, on utilise le chiffrement RSA pour étalbir la clé qui sert au chiffrement symétrique (CBC, AES, DES) des communications. \\ 
+RSA est un chiffrement asymétrique, c'est à dire qu'il utilise deux clés: une publique pour chiffrer et une privée pour déchiffrer. Le principe étant que déchiffrer avec comme seule connaissance la clé publique soit calculatoirement impossible. \\
+
+Le chiffrement RSA fonctionne en 3 étapes:
+\begin{itemize}
+\item \textbf{création des clés} \\
+La création des clés se fait du c\^oté d'Alice par l'algorithme suivant:
+\begin{itemize}
+\item choisir $p$ et $q$, deux nombres premiers distincts
+\item calculer le produit $n = pq$, appelé module de chiffrement 
+\item calculer $\phi(n) = (p - 1)(q -1)$ (c'est la valeur de l'indicatrice d'Euler en $n$) 
+\item choisir un entier naturel $e$ premier avec $\phi(n)$ et strictement inférieur à  $\phi(n)$, appelé exposant de chiffrement
+\item calculer l'entier naturel $d$, inverse de $e$ modulo  $\phi(n)$, et strictement inférieur à  $\phi(n)$, appelé exposant de déchiffrement ($d$ peut se calculer efficacement par l'algorithme d'Euclide étendu)
+\end{itemize}
+Comme $e$ est premier avec  $\phi(n)$, d'après le théorème de Bachet-Bézout il existe deux entiers $d$ et $k$ tels que $ed + k \phi(n) = 1$, c'est-à-dire que $ed = 1\ mod\ \phi(n)$ : $e$ est bien inversible modulo $\phi(n)$.
+
+Le couple ($n$,$e$) est la clé publique du chiffrement, alors que le couple ($n$,$d$) est sa clé privée.
+
+\item \textbf{chiffrement du message} \\
+Si $M$ est un entier naturel strictement inférieur à $n$ représentant un message, alors le message chiffré sera représenté par: \\
+$C = M^e\ mod\ n$ \\
+L'entier naturel $C$ étant choisi strictement inférieur à $n$.
+
+\item \textbf{déchiffrement du message} \\
+Pour déchiffrer $C$, on utilise $d$, l'inverse de $e\ mod\ (p-1)(q-1)$, et on retrouve le message clair $M$ par: \\
+$M = C^d\ mod\ n$ \\
+
+
+On constate que pour chiffrer un message, il suffit de connaître $e$ et $n$. En revanche pour déchiffrer, il faut $d$ et $n$.
+Pour calculer $d$ à l'aide de $e$ et $n$, il faut trouver l'inverse modulaire de $e$ modulo $(p - 1)(q - 1)$ ce que l'on ne sait pas faire sans connaître les entiers $p$ et $q$, c'est-à-dire la décomposition de $n$ en facteurs premiers. \\
+Il faut distinguer les attaques par la force brute, qui consistent à retrouver $p$ et $q$ sur base de la connaissance de $n$ uniquement, et les attaques sur base de la connaissance de $n$ mais aussi de la manière dont $p$ et $q$ ont été générés, du logiciel de cryptographie utilisé, d'un ou plusieurs messages éventuellement interceptés, etc. \\
+La sécurité de l'algorithme RSA contre les attaques par la force brute repose donc sur le fait que casser RSA de cette manière nécessite la factorisation du nombre $n$ en le produit initial des nombres $p$ et $q$, et qu'avec les algorithmes classiques, le temps que prend cette factorisation croît exponentiellement avec la longueur de la clé.
+
+\end{itemize}

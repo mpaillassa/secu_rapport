@@ -1,0 +1,30 @@
+\section{Que faire face aux failles Poodle et Freak ?}
+
+google article Poodle:
+
+The attack described above requires an SSL 3.0 connection to be established, so sisabling the SSL 3.0 protocol in the client or in the server (or both) will completely avoid it. If either side supports only SSL 3.O, then all hope is gone, and a serious updade required to avoid insecure encryption. If SSL 3.O is neither disable nor the only possible protocol version, then the attack is possible if the client uses a downgrade dance for interoperability. 
+
+Disabling SSL 3.O entirely right away may not be practical if it is needed occasinaly to work with legacy systems. Also, similar protocol version downgrades are still a concernwith newer protocol versions (although not nearly as severe as with SSL 3.0). The TLS\_FALLBACK\_SCSV mechanism from [draft-ietf-tls-downgrade-scsv-00] addresses the broader issue across protocol versions, and we consider it crucial especially for systems that maintain SSL 3.O compatibility. The folloainw recommendations summaeize how TLS\_FALLBACK\_SCSV works.
+
+TLS clients that use a downgrade dance to improve interoperability should include the value 0x56, 0x00 (TLS\_FALLBACK\_SCSV) in CLientHello.cipher\_suites in any fallback handshake. THis value serves as a signal allowing updated servers to reject the connection in case of a downgrade attack. Clients should always fall back to the next lower version (if starting at TLS 1.2, try 1.1 next then 1.0 then SSL 3.0) because skipping a protocol version forgoes its better security. (with TLS\_FALLBACK\_SCSV, skipping a version also could entirely prevent a succesful handshake if it happens to be the version that should be use with the server in question)
+
+In TLS servers,whenever an incoming connection includes 0x56,0x00(TLS\_FALLBACK\_SCSV)in ClientHello.cipher\_suites,compareClientHello.client\_version to the highest protocol version supported by the server.If the server supports a version higher than the one indicated by the client,reject the connection with a fatal alert (preferably,inappropriate\_fallback(86) from [draftietftlsdowngradescsv00]
+
+This use of TLS\_FALLBACK\_SCSV will ensure that SSL3.0 is used only when a legacy implementation is involved:attackers can no longer force a protocol downgrade.(Attacksremain possible if both parties allow SSL3.0 but one of them is not updated to support TLS\_FALLBACK\_SCSV, provided that the client implements a downgrade dance down to SSL 3.0.
+
+
+
+
+freak websites 
+
+What should I do?
+
+If you run a server …
+
+You should immediately disable support for TLS export cipher suites. While you’re at it, you should also disable other cipher suites that are known to be insecure and enable forward secrecy. For instructions on how to secure popular HTTPS server software, we recommend Mozilla’s security configuration guide and their SSL configuration generator. We also recommend testing your configuration with the Qualys SSL Labs SSL Server Test tool.
+If you use a browser …
+
+Make sure you have the most recent version of your browser installed, and check for updates frequently. Updates that fix the FREAK attack should be available for all major browsers soon.
+If you’re a sysadmin or developer …
+
+Make sure any TLS libraries you use are up to date. Unpatched OpenSSL, Microsoft Schannel, and Apple SecureTransport all suffer from the vulnerability. Note that these libraries are used internally by many other programs, such as wget and curl. You also need to ensure that your software does not offer export cipher suites, even as a last resort, since they can be exploited even if the TLS library is patched. We have provided tools for software developers that may be helpful for testing.
