@@ -19,7 +19,8 @@ TLS a ensuite pris le relais:
 \item Avril 2006: TLS 1.1
 \item Avril 2008: TLS 1.2
 \end{itemize}
-TLS, comme SSLv3, intègre un mécanisme de compatibilité ascendante avec les versions précédentes. Ainsi, quand le client et le serveur négocient la version du protocole qu'ils vont utiliser, ils peuvent choisir la plus récente commune aux deux. En Mars 2011, la compatibilité des versions TLS avec SSLv2 a été abandonnée. \\
+TLS, comme SSLv3, intègre un mécanisme de compatibilité ascendante avec les versions précédentes. Ainsi, quand le client et le serveur négocient la version du protocole qu'ils vont utiliser, ils peuvent choisir la plus récente commune aux deux. En Mars 2011, la compatibilité des versions TLS avec SSLv2 a été abandonnée. 
+
 La plupart des navigateurs supportent la version TLS 1.2:
 \begin{itemize}
 \item Google Chrome 30 et suivants
@@ -79,9 +80,12 @@ Détails de chaque étape:
 \item on crypte les messages
 \item on ajoute un en-t\^ete
 \end{itemize}
-Quand on reçoit un message, on fait l'opération inverse (décryptage, vérification d'authenfication avec le MAC, décompression, défragmentation). \\
-Les algorithmes utilisés pour la phase de cryptage sont par exemple RC4, DES, 3DES, AES. \\
-Le fonctionnement global décrit par les protocoles TLS handshake et TLS record est très similaire entre toutes les versions de SSL/TLS. \\
+Quand on reçoit un message, on fait l'opération inverse (décryptage, vérification d'authenfication avec le MAC, décompression, défragmentation). 
+
+Les algorithmes utilisés pour la phase de cryptage sont par exemple RC4, DES, 3DES, AES. 
+
+Le fonctionnement global décrit par les protocoles TLS handshake et TLS record est très similaire entre toutes les versions de SSL/TLS. 
+
 
 La sécurité du protocole est donc gérée par deux éléments:
 \begin{itemize}
@@ -89,7 +93,9 @@ La sécurité du protocole est donc gérée par deux éléments:
 \item un chiffrement symétrique qui est utilisé dans la phase d'échange de données, car beaucoup moins coûteux et plus rapide. C'est ce qui a lieu dans la phase de cryptage du record. Les clés de chiffrement symétrique sont calculées à partir du secret partagé (de plus, une fonction de hachage est également utilisée pour assurer l'intégrité et l'authentification des données)
 \end{itemize}
 
-La faille Poodle exploite une faille de SSLv3 au niveau du mode de chiffrement symétrique CBC: le padding (complétion d'un bloc de bits pour respecter un format) permet de déchiffrer des messages. \\
+La faille Poodle exploite une faille de SSLv3 au niveau du mode de chiffrement symétrique CBC: le padding (complétion d'un bloc de bits pour respecter un format) permet de déchiffrer des messages. 
+
+
 La faille Freak exploite une faiblesse de SSLv3 au niveau du chiffrement asymétrique RSA: de nos jours on peut casser une clé RSA de 512 bits facilement, et SSLv3 utilise des clés RSA de 512 bits.
 
 \subsection{La faille Poodle}
@@ -157,7 +163,8 @@ Ici, il s'agit du fait que si l'algorithme de chiffrement asymétrique utilisé 
 
 \paragraph{Fonctionnement du chiffrement RSA}
 
-Le chiffrement RSA sert à établir un secret entre deux entités, par convention Alice (A) et Bob (B). Dans le cas du protocole SSL/TLS, on utilise le chiffrement RSA pour étalbir la clé qui sert au chiffrement symétrique (CBC, AES, DES) des communications. \\ 
+Le chiffrement RSA sert à établir un secret entre deux entités, par convention Alice (A) et Bob (B). Dans le cas du protocole SSL/TLS, on utilise le chiffrement RSA pour étalbir la clé qui sert au chiffrement symétrique (CBC, AES, DES) des communications. 
+
 RSA est un chiffrement asymétrique, c'est à dire qu'il utilise deux clés: une publique pour chiffrer et une privée pour déchiffrer. Le principe étant que déchiffrer avec comme seule connaissance la clé publique soit calculatoirement impossible. \\
 
 Le chiffrement RSA fonctionne en 3 étapes:
@@ -185,8 +192,10 @@ Pour déchiffrer $C$, on utilise $d$, l'inverse de $e\ mod\ (p-1)(q-1)$, et on r
 $M = C^d\ mod\ n$ \\
 
 
-Pour chiffrer un message, il suffit de connaître $e$ et $n$ alors que pour déchiffrer, il faut $d$ et $n$. \\
-Pour calculer $d$ à l'aide de $e$ et $n$, il faut trouver l'inverse modulaire de $e$ modulo $(p - 1)(q - 1)$ ce que l'on ne sait pas faire sans connaître les entiers $p$ et $q$, c'est-à-dire la décomposition de $n$ en facteurs premiers. \\
+Pour chiffrer un message, il suffit de connaître $e$ et $n$ alors que pour déchiffrer, il faut $d$ et $n$. 
+
+Pour calculer $d$ à l'aide de $e$ et $n$, il faut trouver l'inverse modulaire de $e$ modulo $(p - 1)(q - 1)$ ce que l'on ne sait pas faire sans connaître les entiers $p$ et $q$, c'est-à-dire la décomposition de $n$ en facteurs premiers. 
+
 Une attaque par force brute consisterait donc à retrouver $p$ et $q$ en ne connaissant que $n$. Dans le pire des cas, sur une clé de 512 bits, on peut tester tous les nombres premiers inférieurs à $\sqrt{2^{512}}$\\
 %La sécurité de l'algorithme RSA contre les attaques par la force brute repose donc sur le fait que casser RSA de cette manière nécessite la factorisation du nombre $n$ en le produit initial des nombres $p$ et $q$, et qu'avec les algorithmes classiques, le temps que prend cette factorisation croît exponentiellement avec la longueur de la clé. \\
 
