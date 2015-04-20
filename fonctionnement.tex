@@ -1,7 +1,7 @@
 \section{Fonctionnement des failles}
 
 
-Les deux failles utilisent le m\^eme principe et tiennent leur existence du fait que les anciennes versions des protocoles SSL/TLS comportent des failles. L'adversaire utilise une attaque de type "man in the middle" et force l'utilisation d'une version vulnérable de SSL, de manière à pouvoir exploiter ses failles. Parfois il n'est m\^eme pas utile de la forcer, car quand un navigateur doté d’une version récente n’arrive pas à se connecter à un serveur non mis à jour, ou mal configuré, il réessaie en utilisant des versions anciennes : c’est la downgrade dance, qui peut aboutir à l'utilisation d'une ancienne version vulnérable.
+Les deux failles utilisent le m\^eme principe et tiennent leur existence du fait que les anciennes versions des protocoles SSL/TLS comportent des failles. L'adversaire utilise une attaque de type "man in the middle" et force l'utilisation d'une version vulnérable de SSL/TLS (en l'occurrence SSLv3), de manière à pouvoir exploiter ses failles. Parfois il n'est m\^eme pas utile de la forcer, car quand un navigateur doté d’une version récente n’arrive pas à se connecter à un serveur non mis à jour, ou mal configuré, il réessaie en utilisant des versions anciennes : c’est la downgrade dance, qui peut aboutir à l'utilisation d'une ancienne version vulnérable.
 
 \subsection{Un point sur SSL/TLS}
 
@@ -74,12 +74,12 @@ Détails des étapes:
 Quand on reçoit un message, on fait l'opération inverse (décryptage, vérification d'authenfication avec le MAC, décompression, défragmentation). \\
 Les algorithmes utilisés pour la phase de cryptage sont RC4, CBC, AES, DES, etc. \\
 
-Les seules différences entre SSLv3, TLS 1.0, TLS 1.1 et TLS 1.2 sont principalement les "versions" algorithmes utilisés (RSA 512/1024/2048 bits, etc), mais le fonctionnement global décrit par les protocoles TLS handshake et TLS record est très similaire. \\
+Les seules différences entre SSLv3, TLS 1.0, TLS 1.1 et TLS 1.2 sont principalement les "versions" des algorithmes utilisés (RSA 512/1024/2048 bits, etc), mais le fonctionnement global décrit par les protocoles TLS handshake et TLS record est très similaire. \\
 
 La sécurité du protocole est donc assurée par deux éléments:
 \begin{itemize}
 \item un chiffrement asymétrique qui permet, après authentification de la clé publique du serveur, la constitution d'un secret partagé entre le client et le serveur. C'est ce qui a lieu au cours du handshake
-\item un chiffrement symétrique qui est utilisé dans la phase d'échange de données. C'est ce qui a lieu dans la phase de cryptage du record. Les clés de chiffrement symétrique sont calculées à partir du secret partagé (de plus, une fonction de hachage est également utilisée pour assurer l'intégrité et l'authentification des données)
+\item un chiffrement symétrique qui est utilisé dans la phase d'échange de données, car beaucoup moins coûteux et plus rapide. C'est ce qui a lieu dans la phase de cryptage du record. Les clés de chiffrement symétrique sont calculées à partir du secret partagé (de plus, une fonction de hachage est également utilisée pour assurer l'intégrité et l'authentification des données)
 \end{itemize}
 
 La faille Poodle exploite une faille de SSLv3 au niveau du chiffrement symétrique CBC: le padding (complétion d'un bloc de bits pour respecter un format) permet de déchiffrer des messages. \\
