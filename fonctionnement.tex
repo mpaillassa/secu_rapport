@@ -21,7 +21,7 @@ TLS a ensuite pris le relais:
 \end{itemize}
 TLS, comme SSLv3, intègre un mécanisme de compatibilité ascendante avec les versions précédentes. Ainsi, quand le client et le serveur négocient la version du protocole qu'ils vont utiliser, par défaut, ils vont tenter de choisir la version la plus récente commune aux deux. 
 
- En Mars 2011, la compatibilité des versions TLS avec SSLv2 a été abandonnée. %PAILLASSA : c'est necessaire ça ?
+ En Mars 2011, la compatibilité des versions TLS avec SSLv2 a été abandonnée. %PAILLASSA : c'est necessaire ça ? ou faudrait expliquer plus ...?
 
 La plupart des navigateurs supportent la version TLS 1.2:
 \begin{itemize}
@@ -32,7 +32,10 @@ La plupart des navigateurs supportent la version TLS 1.2:
 \item Apple Safari 7 et suivants
 \end{itemize}
 
-Plus précisément, TLS est composé de deux niveaux: TLS Record Protocol (couche transport) et TLS Handshake Protocol (couche session), comme présenté sur la figure \ref{ssl-tls-diag}: \\
+
+\subsubsection{TLS Handshake protocol}
+
+TLS est composé de deux niveaux: TLS Record Protocol (couche transport) et TLS Handshake Protocol (couche session), comme présenté sur la figure \ref{ssl-tls-diag}: \\
 
 \begin{figure}[H]
   \centering
@@ -42,8 +45,6 @@ Plus précisément, TLS est composé de deux niveaux: TLS Record Protocol (couch
 \end{figure}  
 
 
-\subsubsection{TLS Handshake protocol}
-
 Ce protocole permet l'authentification et l'échange de clés nécessaires pour établir une session sécurisée. La figure \ref{handshake} décrit les différentes étapes de ce protocole:
 \begin{figure}[H]
   \centering
@@ -52,17 +53,36 @@ Ce protocole permet l'authentification et l'échange de clés nécessaires pour 
   \label{handshake}
 \end{figure}  
 
-Détails de chaque étape:
+Détails de chaque étape :\\
+
+
+\textbf{ClientHello} : le client envoie ce message au serveur, pour lui indiquer ce qu'il supporte en terme de  :
 \begin{itemize}
-\item le client envoie un message "ClientHello" au serveur, pour lui indiquer la dernière version TLS qu'il supporte, la liste des algorithmes de chiffrement qu'il supporte et les méthodes de compression qu'il supporte. Il envoie également un nombre aléatoire
-\item le serveur renvoie un message "ServerHello", indiquant la version TLS, l'algorithme de chiffrement et la méthode de compression qui seront utilisés. Il envoie également son certificat (permettant l'authentification) et un nombre aléatoire
-\item le serveur envoie un message "ServerHelloDone" pour indiquer qu'il a fini avec la première phase du handshake
-\item le client génère un nombre appelé "PreMasterSecret", encrypté avec la clé publique du certificat du serveur
-\item le client et le serveur génèrent alors leur secret partagé "Master Secret" à partir de leur nombre aléatoire et du "PreMasterSecret"
-\item le client envoie un message "ChangeCipherSpec" indiquant que la suite de la communication sera cryptée, et envoie un message "Finished" qui est donc crypté
-\item le serveur reçoit et décrypte le message et envoie son "ChangedCipherSpec"
-\item le client reçoit et décrypte le message et c'est la fin du handshake
+\item la dernière version TLS 
+\item la liste de algorithmes de chiffrements  
+\item les méthodes de compression
 \end{itemize}
+Il envoie également un nombre aléatoire.\\
+
+
+\textbf{ServerHello} : le serveur envoie ce message au client, en indiquant ce qui sera utilisé en terme de : 
+\begin{itemize}
+\item la version TLS
+\item l'algorithme de chiggrement
+\item la méthode de compression
+\end{itemize}
+Il envoie également son certificat (permettant l'authentification) et un nombre aléatoire\\
+
+\textbf{ServerHelloDone} : le client envoie ce message au serveur pour indiquer qu'il a fini avec la première phase du handshake.\\
+
+\textbf{PreMasterSecret} : le client génère un nombre de ce nom, encrypté avec la clé publique du certificat du serveur.\\
+
+\textbf{MasterSecret} : le client et le serveur génèrent alors leur secret partagé "Master Secret" à partir de leur nombre aléatoire et du "PreMasterSecret".\\
+
+\textbf{ChangeCipherSpec} : le client envoie ce message en indiquant que la suite de la communication sera cryptée, et envoie un message "Finished" qui est donc crypté.\\
+
+\textbf{ChangedCipherSpec} : le serveur reçoit et décrypte le message et envoie son "ChangedCipherSpec".  Le client reçoit ce dernier message, le décrypte et c'est la fin du handshake.\\
+
 Les algorithmes utilisés pour l'échange de clés sont DH (Diffie-Hellman) et RSA. 
 
 \subsubsection{TLS Record Protocol}
