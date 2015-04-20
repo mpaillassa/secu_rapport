@@ -199,7 +199,7 @@ $M = C^d\ mod\ n$ \\
 
 Pour chiffrer un message, il suffit de connaître $e$ et $n$ alors que pour déchiffrer, il faut $d$ et $n$. \\
 Pour calculer $d$ à l'aide de $e$ et $n$, il faut trouver l'inverse modulaire de $e$ modulo $(p - 1)(q - 1)$ ce que l'on ne sait pas faire sans connaître les entiers $p$ et $q$, c'est-à-dire la décomposition de $n$ en facteurs premiers. \\
-Une attaque par force brute consisterait donc à retrouver $p$ et $q$ en ne connaissant que $n$. Dans le pire des cas, sur une clé de 512 bits, on peut tester tous les nombres premiers inférieurs à $\sqrt{2^{512}} = 2^{256}$, et il y en a environ $\frac{2^{256}}{256 \times \ln(2)} = 6.5 \times 10^{74}$ (en utilisant la formule $\pi(x) \approx \frac{x}{\ln(x)}$, où $\pi(x)$ est le nombre d'entiers premiers inférieurs à $x$).\\
+Une attaque par force brute consisterait donc à retrouver $p$ et $q$ en ne connaissant que $n$. Dans le pire des cas, sur une clé de 512 bits, on peut tester tous les nombres premiers inférieurs à $\sqrt{2^{512}} = 2^{256}$, et il y en a environ $\frac{2^{256}}{256 \times \ln(2)} = 6.5 \times 10^{74}$ (en utilisant la formule $\pi(x) \approx \frac{x}{\ln(x)}$, où $\pi(x)$ donne le nombre d'entiers premiers avec $x$ et inférieurs à $x$).\\
 %La sécurité de l'algorithme RSA contre les attaques par la force brute repose donc sur le fait que casser RSA de cette manière nécessite la factorisation du nombre $n$ en le produit initial des nombres $p$ et $q$, et qu'avec les algorithmes classiques, le temps que prend cette factorisation croît exponentiellement avec la longueur de la clé. \\
 
 
