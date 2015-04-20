@@ -1,7 +1,7 @@
 \section{Fonctionnement des failles}
 
 
-Les deux failles utilisent le m\^eme principe et tiennent leur existence du fait que les anciennes versions des protocoles SSL/TLS comportent des failles. L'adversaire utilise une attaque de type "man in the middle" et force l'utilisation d'une version vulnérable de SSL/TLS (en l'occurrence SSLv3), de manière à pouvoir exploiter ses failles. Parfois il n'est m\^eme pas utile de la forcer, car quand un navigateur doté d’une version récente n’arrive pas à se connecter à un serveur non mis à jour, ou mal configuré, il réessaie en utilisant des versions anciennes : c’est la downgrade dance, qui peut aboutir à l'utilisation d'une ancienne version vulnérable.
+Les deux failles POODLE et FREAK utilisent le m\^eme principe et tiennent leur existence du fait que les anciennes versions des protocoles SSL/TLS comportent des failles. L'adversaire utilise une attaque de type "man in the middle" et force l'utilisation d'une version vulnérable de SSL/TLS (en l'occurrence SSLv3), de manière à pouvoir exploiter ses failles. Parfois il n'est m\^eme pas utile de la forcer, car quand un navigateur doté d’une version récente n’arrive pas à se connecter à un serveur non mis à jour, ou mal configuré, il réessaie en utilisant des versions anciennes : c’est la downgrade dance, qui peut aboutir à l'utilisation d'une ancienne version vulnérable.
 
 \subsection{Un point sur SSL/TLS}
 
@@ -19,7 +19,9 @@ TLS a ensuite pris le relais:
 \item Avril 2006: TLS 1.1
 \item Avril 2008: TLS 1.2
 \end{itemize}
-TLS, comme SSLv3, intègre un mécanisme de compatibilité ascendante avec les versions précédentes. Ainsi, quand le client et le serveur négocient la version du protocole qu'ils vont utiliser, ils peuvent choisir la plus récente commune aux deux. En Mars 2011, la compatibilité des versions TLS avec SSLv2 a été abandonnée. 
+TLS, comme SSLv3, intègre un mécanisme de compatibilité ascendante avec les versions précédentes. Ainsi, quand le client et le serveur négocient la version du protocole qu'ils vont utiliser, par défaut, ils vont tenter de choisir la version la plus récente commune aux deux. 
+
+ En Mars 2011, la compatibilité des versions TLS avec SSLv2 a été abandonnée. %PAILLASSA : c'est necessaire ça ?
 
 La plupart des navigateurs supportent la version TLS 1.2:
 \begin{itemize}
@@ -29,6 +31,7 @@ La plupart des navigateurs supportent la version TLS 1.2:
 \item Opera 17 et suivants
 \item Apple Safari 7 et suivants
 \end{itemize}
+
 Plus précisément, TLS est composé de deux niveaux: TLS Record Protocol (couche transport) et TLS Handshake Protocol (couche session), comme présenté sur la figure \ref{ssl-tls-diag}: \\
 
 \begin{figure}[H]
@@ -63,6 +66,7 @@ Détails de chaque étape:
 Les algorithmes utilisés pour l'échange de clés sont DH (Diffie-Hellman) et RSA. 
 
 \subsubsection{TLS Record Protocol}
+
 
 Ce protocole permet de sécuriser les données en utilisant les clés qu'on a crée pendant le handshake. Il permet également de vérifier l'intégrité des données. La figure \ref{record} présente son fonctionnement:
 \begin{figure}[H]
