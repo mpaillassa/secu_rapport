@@ -28,7 +28,15 @@ La plupart des navigateurs supportent la version TLS 1.2:
 \item Opera 17 et suivants
 \item Apple Safari 7 et suivants
 \end{itemize}
-Plus précisément, TLS est composé de deux niveaux: TLS Record Protocol (couche transport) et TLS Handshake Protocol (couche session).
+Plus précisément, TLS est composé de deux niveaux: TLS Record Protocol (couche transport) et TLS Handshake Protocol (couche session), comme présenté sur la figure \ref{ssl-tls-diag}: \\
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[scale=0.5]{img/ssl-tls-diag.jpg}
+  \caption{SSL/TLS layer}
+  \label{ssl-tls-diag}
+\end{figure}  
+
 
 \subsubsection{TLS Handshake protocol}
 
@@ -63,7 +71,7 @@ Ce protocole permet de sécuriser les données en utilisant les clés qu'on a cr
 \label{record}
 \end{figure}
 
-Détails des étapes:
+Détails de chaque étape:
 \begin{itemize}
 \item on divise le message à transmettre en fragments 
 \item on compresse les fragments
@@ -72,17 +80,16 @@ Détails des étapes:
 \item on ajoute un en-t\^ete
 \end{itemize}
 Quand on reçoit un message, on fait l'opération inverse (décryptage, vérification d'authenfication avec le MAC, décompression, défragmentation). \\
-Les algorithmes utilisés pour la phase de cryptage sont RC4, CBC, AES, DES, etc. \\
+Les algorithmes utilisés pour la phase de cryptage sont par exemple RC4, DES, 3DES, AES. \\
+Le fonctionnement global décrit par les protocoles TLS handshake et TLS record est très similaire entre toutes les versions de SSL/TLS. \\
 
-Les seules différences entre SSLv3, TLS 1.0, TLS 1.1 et TLS 1.2 sont principalement les "versions" des algorithmes utilisés (RSA 512/1024/2048 bits, etc), mais le fonctionnement global décrit par les protocoles TLS handshake et TLS record est très similaire. \\
-
-La sécurité du protocole est donc assurée par deux éléments:
+La sécurité du protocole est donc gérée par deux éléments:
 \begin{itemize}
 \item un chiffrement asymétrique qui permet, après authentification de la clé publique du serveur, la constitution d'un secret partagé entre le client et le serveur. C'est ce qui a lieu au cours du handshake
 \item un chiffrement symétrique qui est utilisé dans la phase d'échange de données, car beaucoup moins coûteux et plus rapide. C'est ce qui a lieu dans la phase de cryptage du record. Les clés de chiffrement symétrique sont calculées à partir du secret partagé (de plus, une fonction de hachage est également utilisée pour assurer l'intégrité et l'authentification des données)
 \end{itemize}
 
-La faille Poodle exploite une faille de SSLv3 au niveau du chiffrement symétrique CBC: le padding (complétion d'un bloc de bits pour respecter un format) permet de déchiffrer des messages. \\
+La faille Poodle exploite une faille de SSLv3 au niveau du mode de chiffrement symétrique CBC: le padding (complétion d'un bloc de bits pour respecter un format) permet de déchiffrer des messages. \\
 La faille Freak exploite une faiblesse de SSLv3 au niveau du chiffrement asymétrique RSA: de nos jours on peut casser une clé RSA de 512 bits facilement, et SSLv3 utilise des clés RSA de 512 bits.
 
 \subsection{La faille Poodle}
@@ -90,7 +97,7 @@ La faille Freak exploite une faiblesse de SSLv3 au niveau du chiffrement asymét
 Comme on le voit sur la figure \ref{poodle}, le principe est que le client demande un service qui nécessite l'utilisation de SSL/TLS, et l'adversaire, en utilisant une attaque de type "man in the middle", force l'utilisation de SSLv3 et exploite ses failles.
 
 \begin{figure}[H]
-\includegraphics[scale=0.8]{img/poodle.jpg}
+\includegraphics[scale=0.7]{img/poodle.jpg}
 \caption{fonctionnement de la faille poodle}
 \label{poodle}
 \end{figure}
@@ -102,7 +109,7 @@ Avec cette méthode, l'adversaire n’a pas accès aux fichiers stockés dans l�
 Deux méthodes de chiffrement symétrique sont principalement utilisées dans SSLv3:
 \begin{itemize}
 \item la première est RC4 (Rivest Cipher 4) qui est un chiffrement par flot (stream cipher). Le principe d'un chiffrement par flot est de générer un flot de bits aléatoires $k$ et de réaliser un XOR entre ce flot et le message à chiffrer $m$. L'avantage est que chiffrement et déchiffrement sont très rapides: si $c = m \oplus k$, alors $m = c \oplus k$. Cependant, RC4 est actuellement considéré comme peu s\^ur et ne devrait plus \^etre utilisé
-\item l'autre méthode est un chiffrement par blocs cha\^inés (CBC pour cipher block chaining), et c'est elle qui fait l'objet de l'attaque Poodle que l'on va détailler
+\item l'autre méthode est d'utiliser un algorithme comme DES ou AES avec un mode de chiffrement par blocs cha\^inés (CBC pour cipher block chaining), et c'est elle qui fait l'objet de l'attaque Poodle que l'on va détailler
 \end{itemize}
 
 \paragraph{Fonctionnement du chiffrement par blocs cha\^inés}
@@ -178,9 +185,10 @@ Pour déchiffrer $C$, on utilise $d$, l'inverse de $e\ mod\ (p-1)(q-1)$, et on r
 $M = C^d\ mod\ n$ \\
 
 
-On constate que pour chiffrer un message, il suffit de connaître $e$ et $n$. En revanche pour déchiffrer, il faut $d$ et $n$.
+Pour chiffrer un message, il suffit de connaître $e$ et $n$ alors que pour déchiffrer, il faut $d$ et $n$. \\
 Pour calculer $d$ à l'aide de $e$ et $n$, il faut trouver l'inverse modulaire de $e$ modulo $(p - 1)(q - 1)$ ce que l'on ne sait pas faire sans connaître les entiers $p$ et $q$, c'est-à-dire la décomposition de $n$ en facteurs premiers. \\
-Il faut distinguer les attaques par la force brute, qui consistent à retrouver $p$ et $q$ sur base de la connaissance de $n$ uniquement, et les attaques sur base de la connaissance de $n$ mais aussi de la manière dont $p$ et $q$ ont été générés, du logiciel de cryptographie utilisé, d'un ou plusieurs messages éventuellement interceptés, etc. \\
-La sécurité de l'algorithme RSA contre les attaques par la force brute repose donc sur le fait que casser RSA de cette manière nécessite la factorisation du nombre $n$ en le produit initial des nombres $p$ et $q$, et qu'avec les algorithmes classiques, le temps que prend cette factorisation croît exponentiellement avec la longueur de la clé.
+Une attaque par force brute consisterait donc à retrouver $p$ et $q$ en ne connaissant que $n$. Dans le pire des cas, sur une clé de 512 bits, on peut tester tous les nombres premiers inférieurs à $\sqrt{2^{512}}$\\
+%La sécurité de l'algorithme RSA contre les attaques par la force brute repose donc sur le fait que casser RSA de cette manière nécessite la factorisation du nombre $n$ en le produit initial des nombres $p$ et $q$, et qu'avec les algorithmes classiques, le temps que prend cette factorisation croît exponentiellement avec la longueur de la clé. \\
+
 
 \end{itemize}
