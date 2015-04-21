@@ -1,12 +1,13 @@
 \section{Fonctionnement des failles}
 
-
+\paragraph{}
 Les deux failles POODLE et FREAK utilisent le m\^eme principe et tiennent leur existence du fait que les anciennes versions des protocoles SSL/TLS comportent des failles. L'adversaire utilise une attaque de type "man in the middle" et force l'utilisation d'une version vulnérable de SSL/TLS (en l'occurrence SSLv3), de manière à pouvoir exploiter ses failles. Parfois il n'est m\^eme pas utile de la forcer, car quand un navigateur doté d’une version récente n’arrive pas à se connecter à un serveur non mis à jour, ou mal configuré, il réessaie en utilisant des versions anciennes : c’est la downgrade dance, qui peut aboutir à l'utilisation d'une ancienne version vulnérable.
 
 \subsection{Un point sur SSL/TLS}
 
 \subsubsection{Historique}
 
+\paragraph{}
 SSL/TLS sont des protocoles qui fonctionnent suivant un mode client-serveur, et qui garantissent l'authentification du serveur et du client (optionnel), ainsi que la confidentialité et l'intégrité de données echangées. SSL est l'ancien nom de TLS, et a vécu sur 3 versions:
 \begin{itemize}
 \item 1994: SSL 1.0
@@ -19,11 +20,10 @@ TLS a ensuite pris le relais:
 \item Avril 2006: TLS 1.1
 \item Avril 2008: TLS 1.2
 \end{itemize}
+
 TLS, comme SSLv3, intègre un mécanisme de compatibilité ascendante avec les versions précédentes. Ainsi, quand le client et le serveur négocient la version du protocole qu'ils vont utiliser, par défaut, ils vont tenter de choisir la version la plus récente commune aux deux. 
 
- En Mars 2011, la compatibilité des versions TLS avec SSLv2 a été abandonnée. %PAILLASSA : c'est necessaire ça ? ou faudrait expliquer plus ...?
-
-La plupart des navigateurs supportent la version TLS 1.2:
+Aujourd'hui la plupart des navigateurs supportent la version TLS 1.2 : 
 \begin{itemize}
 \item Google Chrome 30 et suivants
 \item Mozilla Firefox 27 et suivants
@@ -31,6 +31,8 @@ La plupart des navigateurs supportent la version TLS 1.2:
 \item Opera 17 et suivants
 \item Apple Safari 7 et suivants
 \end{itemize}
+
+Ces navigateurs supportent la dernière version mais restent compatibles avec les anciennes aussi sauf la SSLv2 dont la compatibilité a été abandonné en Mars 2011. Cependant, la compatibilité avec SSLv3 persiste alors que cette dernière comporte plusieurs failles et ce sont celles-ci qui ont été exploité par les attaques POODLE et FREAK.  
 
 
 \subsubsection{TLS Handshake protocol}
@@ -68,7 +70,7 @@ Il envoie également un nombre aléatoire.\\
 \textbf{ServerHello} : le serveur envoie ce message au client, en indiquant ce qui sera utilisé en terme de : 
 \begin{itemize}
 \item la version TLS
-\item l'algorithme de chiggrement
+\item l'algorithme de chiffrement
 \item la méthode de compression
 \end{itemize}
 Il envoie également son certificat (permettant l'authentification) et un nombre aléatoire\\
@@ -87,7 +89,7 @@ Les algorithmes utilisés pour l'échange de clés sont DH (Diffie-Hellman) et R
 
 \subsubsection{TLS Record Protocol}
 
-
+\paragraph{}
 Ce protocole permet de sécuriser les données en utilisant les clés qu'on a crée pendant le handshake. Il permet également de vérifier l'intégrité des données. La figure \ref{record} présente son fonctionnement:
 \begin{figure}[H]
 \centering
@@ -123,23 +125,24 @@ La faille Poodle exploite une faille de SSLv3 au niveau du mode de chiffrement s
 La faille Freak exploite une faiblesse de SSLv3 au niveau du chiffrement asymétrique RSA: de nos jours on peut casser une clé RSA de 512 bits facilement, et SSLv3 utilise des clés RSA de 512 bits.
 
 \subsection{La faille Poodle}
-
-Comme on le voit sur la figure \ref{poodle}, le principe est que le client demande un service qui nécessite l'utilisation de SSL/TLS, et l'adversaire, en utilisant une attaque de type "man in the middle", force l'utilisation de SSLv3 et exploite ses failles.
+\paragraph{}
+Comme on le voit sur la figure \ref{poodle}, le principe repose sur une attaque de type "man in the middle" permettant de forcer l'utilisation de SSLv3 entre le client et le serveur dans le but d'exploiter ses failles. 
 
 \begin{figure}[H]
-\includegraphics[scale=0.7]{img/poodle.jpg}
+\centering
+\includegraphics[scale=0.9]{img/poodle.jpg}
 \caption{fonctionnement de la faille poodle}
 \label{poodle}
 \end{figure}
 
-Avec cette méthode, l'adversaire n’a pas accès aux fichiers stockés dans l’appareil ciblé, mais il peut intercepter ses données de connexion, comme par exemple les cookies déposés dans le navigateur par un serveur lors d’une session. Sans posséder le mot de passe du client, l'adversaire peut effectuer des actions comme envoyer des messages sur Twitter en se faisant passer pour elle, lire et effacer son courrier électronique, etc.
+Avec cette méthode, l'attaquant n’a pas accès aux fichiers stockés dans l’appareil ciblé, mais il est capable d'intercepter ses données de connexion, comme par exemple les cookies déposés dans le navigateur par un serveur lors d’une session. Ainsi, sans posséder le mot de passe du client, l'attaquant peut agir dans les comptes du client : envoyer des messages sur Twitter en se faisant passer pour elle, lire et effacer son courrier électronique, etc.
 
 \subsubsection{Détails de la vulnérabilité de SSLv3 exploitée}
 
 Deux méthodes de chiffrement symétrique sont principalement utilisées dans SSLv3:
 \begin{itemize}
-\item la première est RC4 (Rivest Cipher 4) qui est un chiffrement par flot (stream cipher). Le principe d'un chiffrement par flot est de générer un flot de bits aléatoires $k$ et de réaliser un XOR entre ce flot et le message à chiffrer $m$. L'avantage est que chiffrement et déchiffrement sont très rapides: si $c = m \oplus k$, alors $m = c \oplus k$. Cependant, RC4 est actuellement considéré comme peu s\^ur et ne devrait plus \^etre utilisé
-\item l'autre méthode est d'utiliser un algorithme comme DES ou AES avec un mode de chiffrement par blocs cha\^inés (CBC pour cipher block chaining), et c'est elle qui fait l'objet de l'attaque Poodle que l'on va détailler
+\item la première est RC4 (Rivest Cipher 4) qui est un chiffrement par flot (stream cipher). Le principe d'un chiffrement par flot est de générer un flot de bits aléatoires $k$ et de réaliser un XOR entre ce flot et le message à chiffrer $m$. L'avantage présenté par cette méthode réside en la rapidité du chiffrement et du déchiffrement : si $c = m \oplus k$, alors $m = c \oplus k$. Cependant, RC4 est actuellement considéré comme peu s\^ur et ne devrait plus \^etre utilisé
+\item l'autre méthode est d'utiliser un algorithme comme DES ou AES avec un mode de chiffrement par blocs cha\^inés (CBC pour cipher block chaining), et c'est elle qui fait l'objet de l'attaque Poodle que l'on va détailler.
 \end{itemize}
 
 \paragraph{Fonctionnement du chiffrement par blocs cha\^inés}
@@ -150,6 +153,7 @@ Les chiffrements et déchiffrements par blocs cha\^inés sont illustrés en figu
 $c_i = Enc_K(m_i \oplus c_{i-1}),\ c_0 = IV$
 
 \begin{figure}[H]
+\centering
 \includegraphics[scale=0.6]{img/cbc-enc.png}
 \caption{CBC encryption}
 \label{cbc-enc}
@@ -159,6 +163,7 @@ $c_i = Enc_K(m_i \oplus c_{i-1}),\ c_0 = IV$
 $m_i = Dec_K(c_i) \oplus c_{i-1},\ c_0 = IV$ 
 
 \begin{figure}[H]
+\centering
 \includegraphics[scale=0.6]{img/cbc-dec.png}
 \caption{CBC decryption}
 \label{cbc-dec}
@@ -166,24 +171,26 @@ $m_i = Dec_K(c_i) \oplus c_{i-1},\ c_0 = IV$
 
 Si un bit du message chiffré change, le bloc de message en clair correspondant est complètement corrompu et cela inverse le bit correspondant dans le bloc suivant de message en clair, mais le reste du bloc ne change pas. C'est ce qui est exploité par Poodle.
 
-Supposons que l'adversaire ait trois blocs chiffrés $c_1$, $c_2$ et $c_3$ et qu'il souhaite décrypter le second bloc (et donc obtenir $m_2$). Il sait seulement que le dernier bloc est complété (padded) en utilisant la méthode PKCS7, c'est à dire que le dernier bloc est complété avec $n$ octets, chacun égal à $n$.
-Le décryptage fonctionne comme ceci: $m_i = Dec(c_i) \oplus c_{i-1}$, avec $c_0 = IV$. Si l'adversaire change le dernier octet de $c_1$ et envoie ($IV$, $c_1$, $c_2$) au serveur, cela va affecter tout le bloc $m_1$ et le dernier octet de $m_2$. Ensuite le serveur va vérifier le dernier bloc décrypté ($m_2$) et retourner oui ou non si la complétion ("padding") est correcte.
-Si $b_{-1}$ est le dernier octet de $c_1$, l'adversaire le change comme suit: $b_{-1} = b_{-1} \oplus z_{-1} \oplus$ 0x01, où $z_{-1}$ est la valeur du dernier octet de $m_2$. Si $z_{-1}$ est correct, le serveur ne va pas trouver d'erreur de padding (parce que le dernier octet de $m_2$ sera égal à 0x01, ce qui est un padding correct). Dans l'autre cas, le serveur va trouver une erreur de padding et l'adversaire va essayer une autre valeur de $z_{-1}$. Dans le pire des cas, il doit faire 255 essais pour trouver la bonne valeur de $z_{-1}$.
+Supposons que l'attaquant ait trois blocs chiffrés $c_1$, $c_2$ et $c_3$ et qu'il souhaite décrypter le second bloc (et donc obtenir $m_2$). Il sait seulement que le dernier bloc est complété (padded) en utilisant la méthode PKCS7, c'est à dire que le dernier bloc est complété avec $n$ octets, chacun égal à $n$.
 
-Une fois qu'il connait le dernier octet de $m_2$, l'adversaire peut obtenir l'avant dernier octet de $m_2$. Il change les deux derniers octets de $c_1$: $b_{-1} = b_{-1} \oplus z_{-1} \oplus$ 0x02 et $b_{-2} = b_{-2} \oplus z_{-2} \oplus$ 0x02. Après 255 essais au maximum il trouve $z_{-2}$ et ainsi de suite. 
+Le décryptage fonctionne comme ceci: $m_i = Dec(c_i) \oplus c_{i-1}$, avec $c_0 = IV$. Si l'attaquant change le dernier octet de $c_1$ et envoie ($IV$, $c_1$, $c_2$) au serveur, cela va affecter tout le bloc $m_1$ et le dernier octet de $m_2$. Ensuite le serveur va vérifier le dernier bloc décrypté ($m_2$) et retourner oui ou non si la complétion ("padding") est correcte.
 
-Si chaque bloc fait 128 bits (AES), soit 16 octets, l'adversaire va obtenir $m_2$ en moins de 255x16 = 4080 essais. Cette attaque ne co\^ute presque rien et peut \^etre réalisée en quelques secondes.
+Si $b_{-1}$ est le dernier octet de $c_1$, l'attaquant le change comme suit: $b_{-1} = b_{-1} \oplus z_{-1} \oplus$ 0x01, où $z_{-1}$ est la valeur du dernier octet de $m_2$. Si $z_{-1}$ est correct, le serveur ne va pas trouver d'erreur de padding (parce que le dernier octet de $m_2$ sera égal à 0x01, ce qui est un padding correct). Dans l'autre cas, le serveur va trouver une erreur de padding et l'attaquant va essayer une autre valeur de $z_{-1}$. Dans le pire des cas, il doit faire 255 essais pour trouver la bonne valeur de $z_{-1}$.
+
+Une fois qu'il conna\^it le dernier octet de $m_2$, l'attaquant peut obtenir l'avant-dernier octet de $m_2$. Il change les deux derniers octets de $c_1$: $b_{-1} = b_{-1} \oplus z_{-1} \oplus$ 0x02 et $b_{-2} = b_{-2} \oplus z_{-2} \oplus$ 0x02. Après 255 essais au maximum, il trouve $z_{-2}$ et ainsi de suite. 
+
+Si chaque bloc fait 128 bits (AES), soit 16 octets, l'attaquant va obtenir $m_2$ en moins de 255x16 = 4080 essais. Cette attaque ne co\^ute presque rien et peut \^etre réalisée en quelques secondes.
 
 La publication de Google qui a officialisé le faille offre les détails nécessaires pour récupérer les cookies d'une cible: This POODLE Bites: Exploiting The SSL 3.0 Fallback, Security Advisory, Bodo Möller, Thai Duong, Krzysztof Kotowicz, Google, September 2014.
 
 
 \subsection{La faille Freak}
-
-Le principe global de fonctionnement est le m\^eme que pour la faille poodle (une attaque de type "man in the middle" force l'utilisation de SSLv3). La seule différence est que ce n'est pas la m\^eme vulnérabilité de SSLv3 qui est exploitée.
+\paragraph{}
+Le principe global de fonctionnement est le m\^eme que pour la faille POODLE (une attaque de type "man in the middle" qui force l'utilisation de SSLv3). Cependant, c'est encore une autre vulnérabilité de SSLv3 qui a été exploité dans FREAK.
 
 \subsubsection{Détails de la vulnérabilité de SSLv3 exploitée}
-
-Ici, il s'agit du fait que si l'algorithme de chiffrement asymétrique utilisé pendant le handshake est RSA, alors sous SSLv3, la clé est de 512 bits. Cette taille de 512 bits a été choisie par la NSA dans les années 1990, et était juste suffisante pour que eux seuls puissent casser ces clés. Seulement, de nos jours, casser une clé RSA de 512 bits est très abordable. Dans les versions ultérieures de SSLv3 (TLS 1.0, 1.1 et 1.2), ces clés sont plus grandes (1024/2048 bits), d'où l'inter\^et pour l'adversaire de forcer l'utilisation de SSLv3 par une attaque "man in the middle".
+\paragraph{}
+Il s'agit ici de la taille de la clé employée est rpbolématique : si l'algorithme de chiffrement asymétrique utilisé pendant le handashake est RSA, alors sous SSLv3la clé est de 512 bits. Cette taille de 512 bits a été choisie par la NSA dans les années 1990, et était juste suffisante pour que eux seuls puissent casser ces clés. Seulement, de nos jours, casser une clé RSA de 512 bits est très abordable et pour cette raison les versions ultérieures  (TLS 1.0, 1.1 et 1.2) utilisent des clés plus grandes (1024/2048 bits). D'où l'inter\^et pour l'attaquant de forcer l'utilisation de SSLv3 par une attaque "man in the middle".
 
 \paragraph{Fonctionnement du chiffrement RSA}
 
