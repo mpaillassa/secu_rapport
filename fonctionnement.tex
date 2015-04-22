@@ -1,7 +1,9 @@
 \section{Fonctionnement des failles}
 
 \paragraph{}
-Les deux failles POODLE et FREAK utilisent le m\^eme principe et tiennent leur existence du fait que les anciennes versions des protocoles SSL/TLS comportent des failles. L'adversaire utilise une attaque de type "man in the middle" et force l'utilisation d'une version vulnérable de SSL/TLS (en l'occurrence SSLv3), de manière à pouvoir exploiter ses failles. Parfois il n'est m\^eme pas utile de la forcer, car quand un navigateur doté d’une version récente n’arrive pas à se connecter à un serveur non mis à jour, ou mal configuré, il réessaie en utilisant des versions anciennes : c’est la downgrade dance, qui peut aboutir à l'utilisation d'une ancienne version vulnérable.
+Les deux failles POODLE et FREAK utilisent le m\^eme principe et tiennent leur existence du fait que les anciennes versions des protocoles SSL/TLS comportent des failles. L'adversaire utilise une attaque de type "man in the middle" et force l'utilisation d'une version vulnérable de SSL/TLS (en l'occurrence SSLv3), de manière à pouvoir exploiter ses failles. 
+
+Parfois il n'est m\^eme pas utile de la forcer, car quand un navigateur doté d’une version récente n’arrive pas à se connecter à un serveur non mis à jour, ou mal configuré, il réessaie en utilisant des versions anciennes : c’est la downgrade dance, qui peut aboutir à l'utilisation d'une ancienne version vulnérable.
 
 \subsection{Un point sur SSL/TLS}
 
@@ -14,6 +16,8 @@ SSL/TLS sont des protocoles qui fonctionnent suivant un mode client-serveur, et 
 \item Février 1995: SSL 2.0, première version réellement utilisée.
 \item Novembre 1996: SSL 3.0 
 \end{itemize}
+
+\paragraph{}
 TLS a ensuite pris le relais: 
 \begin{itemize}
 \item Janvier 1999: TLS 1.0
@@ -21,8 +25,10 @@ TLS a ensuite pris le relais:
 \item Avril 2008: TLS 1.2
 \end{itemize}
 
+\paragraph{}
 TLS, comme SSLv3, intègre un mécanisme de compatibilité ascendante avec les versions précédentes. Ainsi, quand le client et le serveur négocient la version du protocole qu'ils vont utiliser, par défaut, ils vont tenter de choisir la version la plus récente commune aux deux. 
 
+\paragraph{}
 Aujourd'hui la plupart des navigateurs supportent la version TLS 1.2 : 
 \begin{itemize}
 \item Google Chrome 30 et suivants
@@ -32,6 +38,7 @@ Aujourd'hui la plupart des navigateurs supportent la version TLS 1.2 :
 \item Apple Safari 7 et suivants
 \end{itemize}
 
+\paragraph{}
 Ces navigateurs supportent la dernière version mais restent compatibles avec les anciennes aussi sauf la SSLv2 dont la compatibilité a été abandonné en Mars 2011. Cependant, la compatibilité avec SSLv3 persiste alors que cette dernière comporte plusieurs failles et ce sont celles-ci qui ont été exploité par les attaques POODLE et FREAK.  
 
 
@@ -41,7 +48,7 @@ TLS est composé de deux niveaux: TLS Record Protocol (couche transport) et TLS 
 
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.5]{img/ssl-tls-diag.jpg}
+  \includegraphics[scale=0.6]{img/ssl-tls-diag.jpg}
   \caption{SSL/TLS layer}
   \label{ssl-tls-diag}
 \end{figure}  
@@ -50,7 +57,7 @@ TLS est composé de deux niveaux: TLS Record Protocol (couche transport) et TLS 
 Ce protocole permet l'authentification et l'échange de clés nécessaires pour établir une session sécurisée. La figure \ref{handshake} décrit les différentes étapes de ce protocole:
 \begin{figure}[H]
   \centering
-  \includegraphics[scale=0.6]{img/tls-handshake.png}
+  \includegraphics[scale=0.8]{img/tls-handshake.png}
   \caption{TLS handshake}
   \label{handshake}
 \end{figure}  
@@ -106,19 +113,22 @@ Détails de chaque étape:
 \item on crypte les messages
 \item on ajoute un en-t\^ete
 \end{itemize}
+
+\paragraph{}
 Quand on reçoit un message, on fait l'opération inverse (décryptage, vérification d'authenfication avec le MAC, décompression, défragmentation). 
 
 Les algorithmes utilisés pour la phase de cryptage sont par exemple RC4, DES, 3DES, AES. 
 
 Le fonctionnement global décrit par les protocoles TLS handshake et TLS record est très similaire entre toutes les versions de SSL/TLS. 
 
-
+\paragraph{}
 La sécurité du protocole est donc gérée par deux éléments:
 \begin{itemize}
 \item un chiffrement asymétrique qui permet, après authentification de la clé publique du serveur, la constitution d'un secret partagé entre le client et le serveur. C'est ce qui a lieu au cours du handshake
 \item un chiffrement symétrique qui est utilisé dans la phase d'échange de données, car beaucoup moins coûteux et plus rapide. C'est ce qui a lieu dans la phase de cryptage du record. Les clés de chiffrement symétrique sont calculées à partir du secret partagé (de plus, une fonction de hachage est également utilisée pour assurer l'intégrité et l'authentification des données)
 \end{itemize}
 
+\paragraph{}
 La faille Poodle exploite une faille de SSLv3 au niveau du mode de chiffrement symétrique CBC: le padding (complétion d'un bloc de bits pour respecter un format) permet de déchiffrer des messages. 
 
 
@@ -141,7 +151,9 @@ Avec cette méthode, l'attaquant n’a pas accès aux fichiers stockés dans l�
 
 Deux méthodes de chiffrement symétrique sont principalement utilisées dans SSLv3:
 \begin{itemize}
-\item la première est RC4 (Rivest Cipher 4) qui est un chiffrement par flot (stream cipher). Le principe d'un chiffrement par flot est de générer un flot de bits aléatoires $k$ et de réaliser un XOR entre ce flot et le message à chiffrer $m$. L'avantage présenté par cette méthode réside en la rapidité du chiffrement et du déchiffrement : si $c = m \oplus k$, alors $m = c \oplus k$. Cependant, RC4 est actuellement considéré comme peu s\^ur et ne devrait plus \^etre utilisé
+\item la première est RC4 (Rivest Cipher 4) qui est un chiffrement par flot (stream cipher). Le principe d'un chiffrement par flot est de générer un flot de bits aléatoires $k$ et de réaliser un XOR entre ce flot et le message à chiffrer $m$. L'avantage présenté par cette méthode réside en la rapidité du chiffrement et du déchiffrement : si $c = m \oplus k$, alors $m = c \oplus k$. 
+
+Cependant, RC4 est actuellement considéré comme peu s\^ur et ne devrait plus \^etre utilisé
 \item l'autre méthode est d'utiliser un algorithme comme DES ou AES avec un mode de chiffrement par blocs cha\^inés (CBC pour cipher block chaining), et c'est elle qui fait l'objet de l'attaque Poodle que l'on va détailler.
 \end{itemize}
 
@@ -222,17 +234,26 @@ L'entier naturel $C$ étant choisi strictement inférieur à $n$.
 Pour déchiffrer $C$, on utilise $d$, l'inverse de $e\ mod\ (p-1)(q-1)$, et on retrouve le message clair $M$ par: \\
 $M = C^d\ mod\ n$ \\
 
+\end{itemize}
 
+Pour chiffrer un message, il suffit de connaître $e$ et $n$ alors que pour déchiffrer, il faut $d$ et $n$. 
 
-Pour chiffrer un message, il suffit de connaître $e$ et $n$ alors que pour déchiffrer, il faut $d$ et $n$. \\
-Pour calculer $d$ à l'aide de $e$ et $n$, il faut trouver l'inverse modulaire de $e$ modulo $(p - 1)(q - 1)$ ce que l'on ne sait pas faire sans connaître les entiers $p$ et $q$, c'est-à-dire la décomposition de $n$ en facteurs premiers. \\
-Une attaque par force brute consisterait donc à retrouver $p$ et $q$ en ne connaissant que $n$. Dans le pire des cas, sur une clé de 512 bits, on peut tester tous les nombres premiers inférieurs à $\sqrt{2^{512}} = 2^{256}$, et il y en a environ $\frac{2^{256}}{256 \times \ln(2)} = 6.5 \times 10^{74}$ (en utilisant la formule $\pi(x) \approx \frac{x}{\ln(x)}$, où $\pi(x)$ donne le nombre d'entiers premiers avec $x$ et inférieurs à $x$).\\
+Pour calculer $d$ à l'aide de $e$ et $n$, il faut trouver l'inverse modulaire de $e$ modulo $(p - 1)(q - 1)$ ce que l'on ne sait pas faire sans connaître les entiers $p$ et $q$, c'est-à-dire la décomposition de $n$ en facteurs premiers. 
+
+Une attaque par force brute consisterait donc à retrouver $p$ et $q$ en ne connaissant que $n$. Dans le pire des cas, sur une clé de 512 bits, on peut tester tous les nombres premiers inférieurs à $\sqrt{2^{512}} = 2^{256}$, et il y en a environ $\frac{2^{256}}{256 \times \ln(2)} = 6.5 \times 10^{74}$ (en utilisant la formule $\pi(x) \approx \frac{x}{\ln(x)}$, où $\pi(x)$ donne le nombre d'entiers premiers avec $x$ et inférieurs à $x$).
+
 En 2009, Benjamin Moody a cassé une clé RSA de 512 bits en 73 jours en utilisant seulement un logiciel public (GGNFS) et son ordinateur personnel (dual-core Athlon64 à 1900 MHz): 5 Go d'espace disque et 2.5 Go de RAM lui ont été nécessaires. \\
-$5174413344875007990519123187618500139954995264909695897020209972309881454541 \times 1325290319363741258636842042448323483211759628292406959481461131759210884908747 = 6857599914349403977654744967172758179904114264612947326127169976133296980951450542789808884504301075550786464802304019795402754670660318614966266413770127$
+
+Pour donner un ordre d'idée, voici la factorisation faite par Benjamin Moody : 
+
+$5174413344875007990519123187618500139954995264909695897020209972309881454541 $\\ 
+$ \times  1325290319363741258636842042448323483211759628292406959481461131759210884908747 $ \\
+$ =  68575999143494039776547449671727581799041142646129473261271699761332969809514505427$\\
+\indent $89808884504301075550786464802304019795402754670660318614966266413770127$
 
 
 %La sécurité de l'algorithme RSA contre les attaques par la force brute repose donc sur le fait que casser RSA de cette manière nécessite la factorisation du nombre $n$ en le produit initial des nombres $p$ et $q$, et qu'avec les algorithmes classiques, le temps que prend cette factorisation croît exponentiellement avec la longueur de la clé. \\
 
 
 
-\end{itemize}
+

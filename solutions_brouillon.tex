@@ -1,0 +1,22 @@
+\section{Que faire face aux failles Poodle et Freak}
+
+\paragraph{}
+Concernant les deux failles, la solution générale pour les deux et qui est aussi la plus radicale est la désactivation du support SSLv3 c\^oté client et seveur ( ce qui revient à faire une mise à jour des navigateurs). Une autre solution spécifique à chaque faille serait de désactiver le chiffrement qui pose problème :
+\begin{itemize}
+\item pour POODLE : les algorithmes utilisant le mode de chiffrement CBC défectueux
+\item pour FREAK : RSA 512 bits
+\end {itemize}
+
+\paragraph{}
+Les limites de la solution générale résident dans l'abandon total de SSLv3, ce qui induit qu'il y aura des problèmes de compatibilité avec les utilisateurs de SSLv3 (ceux sous Windows XP par exemple, puisque ce sytème n'a plus de support).
+
+Ainsi, si tous les utilisateurs et les serveurs faisaient des mises à jour, les failles comme FREAK et POODLE seraient inexistants. Cependant, certains sites de ventes préfèrent garder la compatibilité avec SSLv3 pour ne pas perdre des clients.
+
+%Nous avons regardé l'un des sites de ventes en ligne français "vente-privee.com" qui semble toujours utiliser SSlv3 : \textit{Ce processus est basé sur le protocole HTTPS (implémentation de SSLv3 ou TLSv1 sur HTTP), l'un des plus robustes aujourd'hui.} .
+
+Sécurité ou tune ? telle est la question .... 
+
+
+
+
+ 
