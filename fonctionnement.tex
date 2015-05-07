@@ -84,13 +84,13 @@ Il envoie également son certificat (permettant l'authentification) et un nombre
 
 \textbf{ServerHelloDone} : le client envoie ce message au serveur pour indiquer qu'il a fini avec la première phase du handshake.\\
 
-\textbf{PreMasterSecret} : le client génère un nombre de ce nom, encrypté avec la clé publique du certificat du serveur.\\
+\textbf{PreMasterSecret} : le client génère un nombre de ce nom, chiffré avec la clé publique du certificat du serveur.\\
 
 \textbf{MasterSecret} : le client et le serveur génèrent alors leur secret partagé "Master Secret" à partir de leur nombre aléatoire et du "PreMasterSecret".\\
 
-\textbf{ChangeCipherSpec} : le client envoie ce message en indiquant que la suite de la communication sera cryptée, et envoie un message "Finished" qui est donc crypté.\\
+\textbf{ChangeCipherSpec} : le client envoie ce message en indiquant que la suite de la communication sera chiffrée, et envoie un message "Finished" qui est donc crypté.\\
 
-\textbf{ChangedCipherSpec} : le serveur reçoit et décrypte le message et envoie son "ChangedCipherSpec".  Le client reçoit ce dernier message, le décrypte et c'est la fin du handshake.\\
+\textbf{ChangedCipherSpec} : le serveur reçoit et déchiffre le message et envoie son "ChangedCipherSpec".  Le client reçoit ce dernier message, le déchiffre et c'est la fin du handshake.\\
 
 Les algorithmes utilisés pour l'échange de clés sont DH (Diffie-Hellman) et RSA. 
 
@@ -110,14 +110,14 @@ Détails de chaque étape:
 \item on divise le message à transmettre en fragments 
 \item on compresse les fragments
 \item on applique MAC (message authentification code) pour authentifier les messages 
-\item on crypte les messages
+\item on chiffre les messages
 \item on ajoute un en-t\^ete
 \end{itemize}
 
 \paragraph{}
-Quand on reçoit un message, on fait l'opération inverse (décryptage, vérification d'authenfication avec le MAC, décompression, défragmentation). 
+Quand on reçoit un message, on fait l'opération inverse (déchiffrement, vérification d'authenfication avec le MAC, décompression, défragmentation). 
 
-Les algorithmes utilisés pour la phase de cryptage sont par exemple RC4, DES, 3DES, AES. 
+Les algorithmes utilisés pour la phase de chiffrement sont par exemple RC4, DES, 3DES, AES. 
 
 Le fonctionnement global décrit par les protocoles TLS handshake et TLS record est très similaire entre toutes les versions de SSL/TLS. 
 
@@ -125,7 +125,7 @@ Le fonctionnement global décrit par les protocoles TLS handshake et TLS record 
 La sécurité du protocole est donc gérée par deux éléments:
 \begin{itemize}
 \item un chiffrement asymétrique qui permet, après authentification de la clé publique du serveur, la constitution d'un secret partagé entre le client et le serveur. C'est ce qui a lieu au cours du handshake
-\item un chiffrement symétrique qui est utilisé dans la phase d'échange de données, car beaucoup moins coûteux et plus rapide. C'est ce qui a lieu dans la phase de cryptage du record. Les clés de chiffrement symétrique sont calculées à partir du secret partagé (de plus, une fonction de hachage est également utilisée pour assurer l'intégrité et l'authentification des données)
+\item un chiffrement symétrique qui est utilisé dans la phase d'échange de données, car beaucoup moins coûteux et plus rapide. C'est ce qui a lieu dans la phase de chiffrement du record. Les clés de chiffrement symétrique sont calculées à partir du secret partagé (de plus, une fonction de hachage est également utilisée pour assurer l'intégrité et l'authentification des données)
 \end{itemize}
 
 \paragraph{}
@@ -183,9 +183,9 @@ $m_i = Dec_K(c_i) \oplus c_{i-1},\ c_0 = IV$
 
 Si un bit du message chiffré change, le bloc de message en clair correspondant est complètement corrompu et cela inverse le bit correspondant dans le bloc suivant de message en clair, mais le reste du bloc ne change pas. C'est ce qui est exploité par Poodle.
 
-Supposons que l'attaquant ait trois blocs chiffrés $c_1$, $c_2$ et $c_3$ et qu'il souhaite décrypter le second bloc (et donc obtenir $m_2$). Il sait seulement que le dernier bloc est complété (padded) en utilisant la méthode PKCS7, c'est à dire que le dernier bloc est complété avec $n$ octets, chacun égal à $n$.
+Supposons que l'attaquant ait trois blocs chiffrés $c_1$, $c_2$ et $c_3$ et qu'il souhaite déchiffrer le second bloc (et donc obtenir $m_2$). Il sait seulement que le dernier bloc est complété (padded) en utilisant la méthode PKCS7, c'est à dire que le dernier bloc est complété avec $n$ octets, chacun égal à $n$.
 
-Le décryptage fonctionne comme ceci: $m_i = Dec(c_i) \oplus c_{i-1}$, avec $c_0 = IV$. Si l'attaquant change le dernier octet de $c_1$ et envoie ($IV$, $c_1$, $c_2$) au serveur, cela va affecter tout le bloc $m_1$ et le dernier octet de $m_2$. Ensuite le serveur va vérifier le dernier bloc décrypté ($m_2$) et retourner oui ou non si la complétion ("padding") est correcte.
+Le déchiffrement fonctionne comme ceci: $m_i = Dec(c_i) \oplus c_{i-1}$, avec $c_0 = IV$. Si l'attaquant change le dernier octet de $c_1$ et envoie ($IV$, $c_1$, $c_2$) au serveur, cela va affecter tout le bloc $m_1$ et le dernier octet de $m_2$. Ensuite le serveur va vérifier le dernier bloc déchiffré ($m_2$) et retourner oui ou non si la complétion ("padding") est correcte.
 
 Si $b_{-1}$ est le dernier octet de $c_1$, l'attaquant le change comme suit: $b_{-1} = b_{-1} \oplus z_{-1} \oplus$ 0x01, où $z_{-1}$ est la valeur du dernier octet de $m_2$. Si $z_{-1}$ est correct, le serveur ne va pas trouver d'erreur de padding (parce que le dernier octet de $m_2$ sera égal à 0x01, ce qui est un padding correct). Dans l'autre cas, le serveur va trouver une erreur de padding et l'attaquant va essayer une autre valeur de $z_{-1}$. Dans le pire des cas, il doit faire 255 essais pour trouver la bonne valeur de $z_{-1}$.
 
@@ -240,7 +240,7 @@ Pour chiffrer un message, il suffit de connaître $e$ et $n$ alors que pour déc
 
 Pour calculer $d$ à l'aide de $e$ et $n$, il faut trouver l'inverse modulaire de $e$ modulo $(p - 1)(q - 1)$ ce que l'on ne sait pas faire sans connaître les entiers $p$ et $q$, c'est-à-dire la décomposition de $n$ en facteurs premiers. 
 
-Une attaque par force brute consisterait donc à retrouver $p$ et $q$ en ne connaissant que $n$. Dans le pire des cas, sur une clé de 512 bits, on peut tester tous les nombres premiers inférieurs à $\sqrt{2^{512}} = 2^{256}$, et il y en a environ $\frac{2^{256}}{256 \times \ln(2)} = 6.5 \times 10^{74}$ (en utilisant la formule $\pi(x) \approx \frac{x}{\ln(x)}$, où $\pi(x)$ donne le nombre d'entiers premiers avec $x$ et inférieurs à $x$).
+Une attaque par force brute consisterait donc à retrouver $p$ et $q$ en ne connaissant que $n$. Factoriser un entier $n$ en $pq$ avec $p$ et $q$ premiers est reconnu comme étant un problème très difficile (bien que ce ne soit pas prouvé) et dans le pire des cas, sur une clé de 512 bits, on peut tester tous les nombres premiers inférieurs à $\sqrt{2^{512}} = 2^{256}$, et il y en a environ $\frac{2^{256}}{256 \times \ln(2)} = 6.5 \times 10^{74}$ (en utilisant la formule $\pi(x) \approx \frac{x}{\ln(x)}$, où $\pi(x)$ donne le nombre d'entiers premiers avec $x$ et inférieurs à $x$).
 
 En 2009, Benjamin Moody a cassé une clé RSA de 512 bits en 73 jours en utilisant seulement un logiciel public (GGNFS) et son ordinateur personnel (dual-core Athlon64 à 1900 MHz): 5 Go d'espace disque et 2.5 Go de RAM lui ont été nécessaires. \\
 
